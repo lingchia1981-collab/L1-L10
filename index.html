@@ -147,7 +147,7 @@
             font-size: 20px;
             font-weight: bold;
             border-radius: 20px;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
             transition: all 0.1s;
             text-align: center;
             box-shadow: 0 3px 5px rgba(0,0,0,0.05);
@@ -172,7 +172,7 @@
             font-size: 18px;
             font-weight: bold;
             border-radius: 10px;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
             transition: all 0.2s;
         }
         #submit-btn:hover {
@@ -373,7 +373,7 @@
         { word: "銀行", pinyin: "yínháng" },
         { word: "時候", pinyin: "shíhòu" },
         { word: "下次", pinyin: "xiàcì" },
-        { word: "沒問題", pinyin: "méiwèntí" },
+        { word: "沒問題", pinyin: "méi wèntí" },
         { word: "有空", pinyin: "yǒukòng" },
         { word: "再見", pinyin: "zàijiàn" },
         { word: "剛", pinyin: "gāng" },
@@ -535,22 +535,15 @@
             currentAudio = null;
         }
         const q = shuffledQuestions[currentIndex];
-        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(q.word)}&tl=zh-TW&client=gtx`;
+        
+        // 使用拼音進行語音輸入以精準發出指定聲調 (例如 chābùduō)
+        const textToSpeech = q.pinyin || q.word;
+        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToSpeech)}&tl=zh-TW&client=gtx`;
+        
         currentAudio = new Audio(audioUrl);
         currentAudio.play().catch(error => {
-            console.log("Audio play failed, fallback to synthesis:", error);
-            fallbackSpeech(q.word);
+            console.log("Google Translate Audio play failed:", error);
         });
-    }
-
-    function fallbackSpeech(text) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'zh-TW';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
     }
 
     function shuffleCurrentQuestions() {

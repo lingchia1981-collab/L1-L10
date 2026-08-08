@@ -1,0 +1,721 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <!-- 隱身斗篷：阻絕網址外洩，讓 Google Translate 語音順利播放 -->
+    <meta name="referrer" content="no-referrer"> 
+    <title>Word Quest</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f0f8ff;
+            color: #4a4a4a;
+            font-family: "Comic Sans MS", "Microsoft JhengHei", Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
+        }
+        #game-container {
+            position: relative;
+            width: 520px;
+            height: 620px;
+            background: #ffffff;
+            border: 3px solid #bae6fd;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(186, 230, 253, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        #header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            background: #e0f2fe;
+            color: #0284c7;
+            padding: 6px 12px;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        #question-box {
+            width: 100%;
+            background: #fef08a;
+            border: 2px solid #38bdf8;
+            padding: 8px 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0369a1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        @keyframes floatAni {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes bounceAni {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .cute-icon-top {
+            position: absolute;
+            top: 4px;
+            left: 10px;
+            font-size: 20px;
+            animation: floatAni 2s infinite ease-in-out;
+        }
+        .cute-icon-top-right {
+            position: absolute;
+            top: 4px;
+            right: 10px;
+            font-size: 20px;
+            animation: bounceAni 1.5s infinite ease-in-out;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .audio-btn, .shuffle-btn {
+            background: #38bdf8;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(56, 189, 248, 0.3);
+            transition: all 0.2s;
+        }
+        .shuffle-btn {
+            background: #f59e0b;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+        }
+        .audio-btn:hover {
+            background: #0ea5e9;
+            transform: scale(1.05);
+        }
+        .shuffle-btn:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+        .section-title {
+            font-size: 16px;
+            color: #0284c7;
+            margin: 2px 0;
+            align-self: flex-start;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        @keyframes starSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .section-title span {
+            animation: starSpin 3s infinite linear;
+            display: inline-block;
+        }
+        .options-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .option-btn {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            color: #15803d;
+            padding: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
+            transition: all 0.1s;
+            text-align: center;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .option-btn:hover {
+            background: #bbf7d0;
+            color: #14532d;
+            transform: scale(1.02);
+        }
+        .option-btn.selected {
+            background: #38bdf8 !important;
+            border-color: #0284c7 !important;
+            color: white !important;
+        }
+        #submit-btn {
+            background: #bae6fd;
+            border: 2px solid #38bdf8;
+            color: #0369a1;
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%230284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="23"/><line x1="1" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="23" y2="12"/><circle cx="12" cy="12" r="1.5" fill="%230284c7"/></svg>') 18 18, auto;
+            transition: all 0.2s;
+        }
+        #submit-btn:hover {
+            background: #38bdf8;
+            color: white;
+            transform: scale(1.01);
+        }
+        #message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(240, 248, 255, 0.96);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #message-overlay h2 {
+            color: #0284c7;
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+        #message-overlay p {
+            font-size: 18px;
+            color: #0369a1;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+        .start-btn {
+            background: #38bdf8;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(56, 189, 248, 0.4);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .start-btn:hover {
+            background: #0ea5e9;
+            transform: scale(1.05);
+        }
+        .bullet {
+            position: absolute;
+            width: 14px;
+            height: 26px;
+            background: #0ea5e9;
+            border-radius: 7px;
+            pointer-events: none;
+            z-index: 50;
+            box-shadow: 0 0 8px #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="header">
+        <span id="score-display">⭐ Score: 0</span>
+        <span id="progress-display">🎯 1 / 0</span>
+    </div>
+
+    <div id="question-box">
+        <span class="cute-icon-top">💛💛</span>
+        <span class="cute-icon-top-right">🐬💧</span>
+        <span>Listen & match!</span>
+        <div class="btn-group">
+            <button class="audio-btn" id="audio-play-btn" type="button" onclick="playGoogleTranslateAudio()">🔊 Play Audio</button>
+            <button class="shuffle-btn" id="shuffle-btn" type="button" onclick="shuffleCurrentQuestions()">🔀 Shuffle</button>
+        </div>
+    </div>
+
+    <div class="section-title"><span>⭐</span> Select Pinyin</div>
+    <div id="pinyin-options" class="options-grid"></div>
+
+    <div class="section-title"><span>⭐</span> Select Hanzi</div>
+    <div id="hanzi-options" class="options-grid"></div>
+
+    <button id="submit-btn" type="button" onclick="checkAnswer()">✨ Submit ✨</button>
+
+    <div id="message-overlay">
+        <h2 id="overlay-title">🌟 Sweet Word Quest 🌟</h2>
+        <p id="overlay-desc">Match Pinyin and Hanzi! 🐳✨<br>Click options to shoot targets! 🎯🔫</p>
+        <button class="start-btn" id="action-btn" type="button" onclick="startGame()">Play 🚀</button>
+    </div>
+</div>
+
+<script>
+    const vocabularyList = [
+        // 既有詞彙
+        { word: "號", pinyin: "hào" },
+        { word: "建議", pinyin: "jiànyì" },
+        { word: "夜市", pinyin: "yèshì" },
+        { word: "應該", pinyin: "yīnggāi" },
+        { word: "逛", pinyin: "guàng" },
+        { word: "特別", pinyin: "tèbié" },
+        { word: "決定", pinyin: "juédìng" },
+        { word: "黃色", pinyin: "huángsè" },
+        { word: "芒果", pinyin: "mángguǒ" },
+        { word: "給", pinyin: "gěi" },
+        { word: "紅色", pinyin: "hóngsè" },
+        { word: "西瓜", pinyin: "xīguā" },
+        { word: "拍", pinyin: "pāi" },
+        { word: "笑", pinyin: "xiào" },
+        { word: "穿", pinyin: "chuān" },
+        { word: "旅館", pinyin: "lǚguǎn" },
+        { word: "男", pinyin: "nán" },
+        { word: "矮", pinyin: "ǎi" },
+        { word: "乾淨", pinyin: "gānjìng" },
+        { word: "窗戶", pinyin: "chuānghù" },
+        { word: "往", pinyin: "wǎng" },
+        { word: "藍色", pinyin: "lánsè" },
+        { word: "因為", pinyin: "yīnwèi" },
+        { word: "這些", pinyin: "zhèxiē" },
+
+        // 新增詞彙（已更新：先生 xiānshēng、時候 shíhòu、微波 wéibō、這些）
+        { word: "請進", pinyin: "qǐngjìn" },
+        { word: "接", pinyin: "jiē" },
+        { word: "先生", pinyin: "xiānshēng" },
+        { word: "叫", pinyin: "jiào" },
+        { word: "歡迎", pinyin: "huānyíng" },
+        { word: "來", pinyin: "lái" },
+        { word: "烏龍茶", pinyin: "wūlóngchá" },
+        { word: "日本", pinyin: "Rìběn" },
+        { word: "咖啡", pinyin: "kāfēi" },
+        { word: "漂亮", pinyin: "piàoliàng" },
+        { word: "坐", pinyin: "zuò" },
+        { word: "照片", pinyin: "zhàopiàn" },
+        { word: "照相", pinyin: "zhàoxiàng" },
+        { word: "張", pinyin: "zhāng" },
+        { word: "伯母", pinyin: "bómǔ" },
+        { word: "幾", pinyin: "jǐ" },
+        { word: "兄弟", pinyin: "xiōngdì" },
+        { word: "兩", pinyin: "liǎng" },
+        { word: "週末", pinyin: "zhōumò" },
+        { word: "常", pinyin: "cháng" },
+        { word: "打", pinyin: "dǎ" },
+        { word: "踢", pinyin: "tī" },
+        { word: "運動", pinyin: "yùndòng" },
+        { word: "網球", pinyin: "wǎngqiú" },
+        { word: "棒球", pinyin: "bàngqiú" },
+        { word: "籃球", pinyin: "lánqiú" },
+        { word: "足球", pinyin: "zúqiú" },
+        { word: "游泳", pinyin: "yóuyǒng" },
+        { word: "怎麼樣", pinyin: "zěnmeyàng" },
+        { word: "越南", pinyin: "Yuènán" },
+        { word: "一共", pinyin: "yígòng" },
+        { word: "錢", pinyin: "qián" },
+        { word: "買", pinyin: "mǎi" },
+        { word: "杯", pinyin: "bēi" },
+        { word: "熱", pinyin: "rè" },
+        { word: "幫", pinyin: "bāng" },
+        { word: "微波", pinyin: "wéibō" },
+        { word: "塊", pinyin: "kuài" },
+        { word: "外帶", pinyin: "wàidài" },
+        { word: "內用", pinyin: "nèiyòng" },
+        { word: "支", pinyin: "zhī" },
+        { word: "舊", pinyin: "jiù" },
+        { word: "貴", pinyin: "guì" },
+        { word: "賣", pinyin: "mài" },
+        { word: "便宜", pinyin: "piányí" },
+        { word: "萬", pinyin: "wàn" },
+        { word: "真", pinyin: "zhēn" },
+        { word: "最", pinyin: "zuì" },
+        { word: "知道", pinyin: "zhīdào" },
+        { word: "一定", pinyin: "yídìng" },
+        { word: "碗", pinyin: "wǎn" },
+        { word: "怕", pinyin: "pà" },
+        { word: "辣", pinyin: "là" },
+        { word: "不錯", pinyin: "búcuò" },
+        { word: "教書", pinyin: "jiāoshū" },
+        { word: "學校", pinyin: "xuéxiào" },
+        { word: "遠", pinyin: "yuǎn" },
+        { word: "附近", pinyin: "fùjìn" },
+        { word: "樓下", pinyin: "lóuxià" },
+        { word: "風景", pinyin: "fēngjǐng" },
+        { word: "花蓮", pinyin: "Huālián" },
+        { word: "東西", pinyin: "dōngxi" },
+        { word: "商店", pinyin: "shāngdiàn" },
+        { word: "宿舍", pinyin: "sùshè" },
+        { word: "裡面", pinyin: "lǐmiàn" },
+        { word: "外面", pinyin: "wàimiàn" },
+        { word: "旁邊", pinyin: "pángbiān" },
+        { word: "棟", pinyin: "dòng" },
+        { word: "教室", pinyin: "jiàoshì" },
+        { word: "游泳池", pinyin: "yóuyǒngchí" },
+        { word: "唱歌", pinyin: "chànggē" },
+        { word: "從", pinyin: "cóng" },
+        { word: "銀行", pinyin: "yínháng" },
+        { word: "時候", pinyin: "shíhòu" },
+        { word: "下次", pinyin: "xiàcì" },
+        { word: "沒問題", pinyin: "méiwèntí" },
+        { word: "有空", pinyin: "yǒukòng" },
+        { word: "再見", pinyin: "zàijiàn" },
+        { word: "剛", pinyin: "gāng" },
+        { word: "半", pinyin: "bàn" },
+        { word: "比賽", pinyin: "bǐsài" },
+        { word: "結束", pinyin: "jiéshù" },
+        { word: "忙", pinyin: "máng" },
+        { word: "書法", pinyin: "shūfǎ" },
+        { word: "開始", pinyin: "kāishǐ" },
+        { word: "等一下", pinyin: "děng yíxià" },
+        { word: "慢", pinyin: "màn" },
+        { word: "車票", pinyin: "chēpiào" },
+        { word: "鐘頭", pinyin: "zhōngtóu" },
+        { word: "比較", pinyin: "bǐjiào" },
+        { word: "舒服", pinyin: "shūfú" },
+        { word: "站", pinyin: "zhàn" },
+        { word: "高鐵", pinyin: "gāotiě" },
+        { word: "網路", pinyin: "wǎnglù" },
+        { word: "便利商店", pinyin: "biànlì shāngdiàn" },
+        { word: "參觀", pinyin: "cānguān" },
+        { word: "古代", pinyin: "gǔdài" },
+        { word: "騎", pinyin: "qí" },
+        { word: "載", pinyin: "zài" },
+        { word: "捷運", pinyin: "jiéyùn" },
+        { word: "故宮博物院", pinyin: "Gùgōng Bówùyuàn" },
+        { word: "計程車", pinyin: "jìchéngchē" },
+        { word: "差不多", pinyin: "chàbùduō" },
+        { word: "放假", pinyin: "fàngjià" },
+        { word: "打算", pinyin: "dǎsuàn" },
+        { word: "電視", pinyin: "diànshì" },
+        { word: "旅行", pinyin: "lǚxíng" },
+        { word: "大概", pinyin: "dàgài" },
+        { word: "多久", pinyin: "duōjiǔ" },
+        { word: "臺南", pinyin: "Táinán" },
+        { word: "臺東", pinyin: "Táidōng" }
+    ];
+
+    let questions = [];
+    let shuffledQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let selectedPinyin = null;
+    let selectedHanzi = null;
+    let backgroundMusic = null;
+    let currentAudio = null;
+    let audioCtx = null;
+
+    function generateQuestionData() {
+        const allHanzi = vocabularyList.map(v => v.word);
+        const allPinyin = vocabularyList.map(v => v.pinyin);
+
+        return vocabularyList.map(item => {
+            const hanziDistractors = getRandomItems(allHanzi.filter(h => h !== item.word), 3);
+            const pinyinDistractors = getRandomItems(allPinyin.filter(p => p !== item.pinyin), 3);
+
+            return {
+                word: item.word,
+                pinyin: item.pinyin,
+                hanziOptions: [item.word, ...hanziDistractors],
+                pinyinOptions: [item.pinyin, ...pinyinDistractors]
+            };
+        });
+    }
+
+    function getRandomItems(arr, count) {
+        const shuffled = [...arr].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, count);
+    }
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playSuccessSound() {
+        initAudioContext();
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.1);
+            osc.frequency.setValueAtTime(783.99, now + 0.2);
+            osc.frequency.setValueAtTime(1046.50, now + 0.3);
+
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.6);
+        } catch (e) {
+            console.log("Sound play error", e);
+        }
+    }
+
+    function playErrorSound() {
+        initAudioContext();
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.setValueAtTime(200, now + 0.15);
+
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (e) {
+            console.log("Sound play error", e);
+        }
+    }
+
+    function initBackgroundMusic() {
+        if (backgroundMusic) return;
+        try {
+            initAudioContext();
+            const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+
+            function playNote() {
+                if (audioCtx.state === 'suspended') return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(notes[Math.floor(Math.random() * notes.length)], audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            }
+            backgroundMusic = setInterval(playNote, 1200);
+        } catch (e) {
+            console.log("Web Audio API not supported", e);
+        }
+    }
+
+    function playGoogleTranslateAudio() {
+        if (currentIndex >= shuffledQuestions.length) return;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        const q = shuffledQuestions[currentIndex];
+        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(q.word)}&tl=zh-TW&client=gtx`;
+        currentAudio = new Audio(audioUrl);
+        currentAudio.play().catch(error => {
+            console.log("Audio play failed, fallback to synthesis:", error);
+            fallbackSpeech(q.word);
+        });
+    }
+
+    function fallbackSpeech(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function shuffleCurrentQuestions() {
+        questions = generateQuestionData();
+        shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+        currentIndex = 0;
+        score = 0;
+        document.getElementById('score-display').innerText = `⭐ Score: ${score}`;
+        loadQuestion();
+    }
+
+    function startGame() {
+        initBackgroundMusic();
+        shuffleCurrentQuestions();
+        document.getElementById('message-overlay').style.display = 'none';
+    }
+
+    function shootBulletToTarget(targetElement, callback) {
+        const container = document.getElementById('game-container');
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = targetElement.getBoundingClientRect();
+
+        const bullet = document.createElement('div');
+        bullet.className = 'bullet';
+        const startX = containerRect.width / 2 - 7;
+        const startY = containerRect.height - 20;
+        bullet.style.left = `${startX}px`;
+        bullet.style.top = `${startY}px`;
+        container.appendChild(bullet);
+
+        const destX = targetRect.left - containerRect.left + targetRect.width / 2 - 7;
+        const destY = targetRect.top - containerRect.top + targetRect.height / 2 - 13;
+
+        bullet.style.transition = 'all 0.15s ease-out';
+        setTimeout(() => {
+            bullet.style.left = `${destX}px`;
+            bullet.style.top = `${destY}px`;
+        }, 20);
+
+        setTimeout(() => {
+            bullet.remove();
+            if (callback) callback();
+        }, 170);
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= shuffledQuestions.length) {
+            endGame();
+            return;
+        }
+
+        selectedPinyin = null;
+        selectedHanzi = null;
+        
+        const q = shuffledQuestions[currentIndex];
+        document.getElementById('progress-display').innerText = `🎯 ${currentIndex + 1} / ${shuffledQuestions.length}`;
+        document.getElementById('score-display').innerText = `⭐ Score: ${score}`;
+
+        playGoogleTranslateAudio();
+
+        let shuffledPinyin = [...q.pinyinOptions].sort(() => Math.random() - 0.5);
+        let shuffledHanzi = [...q.hanziOptions].sort(() => Math.random() - 0.5);
+
+        const pinyinContainer = document.getElementById('pinyin-options');
+        pinyinContainer.innerHTML = '';
+        shuffledPinyin.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.type = 'button';
+            btn.innerText = p;
+            btn.onclick = () => {
+                shootBulletToTarget(btn, () => {
+                    pinyinContainer.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedPinyin = p;
+                });
+            };
+            pinyinContainer.appendChild(btn);
+        });
+
+        const hanziContainer = document.getElementById('hanzi-options');
+        hanziContainer.innerHTML = '';
+        shuffledHanzi.forEach(h => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.type = 'button';
+            btn.innerText = h;
+            btn.onclick = () => {
+                shootBulletToTarget(btn, () => {
+                    hanziContainer.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedHanzi = h;
+                });
+            };
+            hanziContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer() {
+        if (!selectedPinyin || !selectedHanzi) {
+            alert("Please select both Pinyin and Hanzi! 🐾");
+            return;
+        }
+
+        const q = shuffledQuestions[currentIndex];
+        const isCorrectPinyin = (selectedPinyin === q.pinyin);
+        const isCorrectHanzi = (selectedHanzi === q.word);
+
+        if (isCorrectPinyin && isCorrectHanzi) {
+            score += 10;
+            document.getElementById('score-display').innerText = `⭐ Score: ${score}`;
+            playSuccessSound();
+            showFeedback(true, `🌟 Great job! (+10 pts) 🌟\nTarget: ${q.word} (${q.pinyin})`);
+        } else {
+            playErrorSound();
+            showFeedback(false, `💫 Oops! 💫\nCorrect: ${q.word} (${q.pinyin})\nYours: ${selectedHanzi} (${selectedPinyin})`);
+        }
+    }
+
+    function showFeedback(isCorrect, message) {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        const overlay = document.getElementById('message-overlay');
+        const title = document.getElementById('overlay-title');
+        const desc = document.getElementById('overlay-desc');
+        const btn = document.getElementById('action-btn');
+
+        overlay.style.display = 'flex';
+        title.innerText = isCorrect ? "🎉 Awesome! 🎉" : "🎈 Try Again! 🎈";
+        desc.innerText = message;
+        btn.innerText = "Next 🚀";
+        btn.onclick = nextQuestion;
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        document.getElementById('message-overlay').style.display = 'none';
+        loadQuestion();
+    }
+
+    function endGame() {
+        if (backgroundMusic) {
+            clearInterval(backgroundMusic);
+            backgroundMusic = null;
+        }
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        const overlay = document.getElementById('message-overlay');
+        const title = document.getElementById('overlay-title');
+        const desc = document.getElementById('overlay-desc');
+        const btn = document.getElementById('action-btn');
+
+        overlay.style.display = 'flex';
+        title.innerText = "🏆 You Win! 🏆";
+        desc.innerText = `Final Score: ${score} points! You are amazing! 🦄✨`;
+        btn.innerText = "Play Again 💖";
+        btn.onclick = startGame;
+    }
+</script>
+
+</body>
+</html>
+
